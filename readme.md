@@ -88,67 +88,67 @@ _base58-zig_ is encoder/decoder library written in Zig.
 <details>
 <summary><code>Encoder</code> - Encodes a `[]u8` into a base58 encoded string.</summary>
 
-- **Example**
+**Example**
 
-      ```zig
-      const std = @import("std");
-      const base58 = @import("base58-zig");
+```zig
+const std = @import("std");
+const base58 = @import("base58-zig");
 
-      const allocator = std.heap.page_allocator;
+const allocator = std.heap.page_allocator;
 
-      var someBytes = [4]u8{ 10, 20, 30, 40 };
+var someBytes = [4]u8{ 10, 20, 30, 40 };
 
-      pub fn main() !void {
-          var encoder = base58.Encoder.init(allocator, .{});
-          var encodedStr = try encoder.encode(allocator, &someBytes);
-          std.log.debug("encoded val: {s}", .{encodedStr});
-      }
-      ```
+pub fn main() !void {
+    var encoder = base58.Encoder.init(allocator, .{});
+    var encodedStr = try encoder.encode(allocator, &someBytes);
+    std.log.debug("encoded val: {s}", .{encodedStr});
+}
+```
 
 </details>
 
 <details>
 <summary><code>Decoder</code> - Decodes a base58 encoded string into a `[]u8`.</summary>
 
-- **Example**
+**Example**
 
-      ```zig
-      const std = @import("std");
-      const base58 = @import("base58-zig");
+```zig
+const std = @import("std");
+const base58 = @import("base58-zig");
 
-      const allocator = std.heap.page_allocator;
+const allocator = std.heap.page_allocator;
 
-      var encodedStr: []const u8 = "4rL4RCWHz3iNCdCaveD8KcHfV9YWGsqSHFPo7X2zBNwa";
+var encodedStr: []const u8 = "4rL4RCWHz3iNCdCaveD8KcHfV9YWGsqSHFPo7X2zBNwa";
 
-      pub fn main() !void {
-          var decoder = base58.Decoder.init(allocator, .{});
-          var decodedBytes = try decoder.decode(encodedStr);
-          std.log.debug("decoded bytes: {any}", .{decodedBytes});
-      }
-      ```
+pub fn main() !void {
+    var decoder = base58.Decoder.init(allocator, .{});
+    var decodedBytes = try decoder.decode(encodedStr);
+    std.log.debug("decoded bytes: {any}", .{decodedBytes});
+}
+```
 
 </details>
 
 <details>
 <summary><code>Custom Alphabet</code> - create a custom alphabet set to pass to encoder/decoder`.</summary>
 
-- **Example**
+**Example**
 
-      ```zig
-      const std = @import("std");
-      const base58 = @import("base58-zig");
+```zig
+const std = @import("std");
+const base58 = @import("base58-zig");
 
-      const allocator = std.heap.page_allocator;
+const allocator = std.heap.page_allocator;
 
-      var alpha = base58.Alphabet.new(.{
-        .alphabet = [58]u8{...}. // custom alphabets
-      });
+var alpha = base58.Alphabet.new(.{
+.alphabet = [58]u8{...}. // custom alphabets
+});
 
-      pub fn main() !void {
-          var encoder = base58.Encoder.init(allocator, .{ alphabet = alpha });
-          var encodedStr = try encoder.encode(allocator, &someBytes);
-          std.log.debug("encoded val: {s}", .{encodedStr});
-      }
-      ```
+pub fn main() !void {
+    var encoder = base58.Encoder.init(allocator, .{ alphabet = alpha });
+    var encodedStr = try encoder.encode(allocator, &someBytes);
+    std.log.debug("encoded val: {s}", .{encodedStr});
+}
+```
 
 </details>
