@@ -75,7 +75,7 @@ _base58-zig_ is encoder/decoder library written in Zig.
        .name = "my-project",
        .version = "1.0.0",
        .dependencies = .{
-           .json = .{
+           .@"base58-zig" = .{
                .url = "https://github.com/ultd/base58-zig/archive/<COMMIT>.tar.gz",
    +           .hash = "<HASH>",
            },
