@@ -111,7 +111,10 @@ pub fn main() !void {
 <details>
 <summary><code>encode</code> - Base58 Encodes a `[]u8` into an `dest` buffer passed and returns bytes written to buffer.</summary>
 
+<br/>
 The `dest` buffer written to needs to be properly sized. Base58 encoding is a variable length encoder therefore you should allocate extra and then resize if needed afterwards. Below is an example.
+<br/>
+<br/>
 
 **Example**
 
@@ -166,6 +169,11 @@ pub fn main() !void {
 
 <details>
 <summary><code>decode</code> - Decodes a base58 encoded string into `dest` buffer and returns number of bytes written.</summary>
+
+<br/>
+The `dest` buffer written to needs to be properly sized. Base58 encoding is a variable length encoder therefore you should allocate extra and then resize if needed afterwards. Below is an example.
+<br/>
+<br/>
 
 **Example**
 
