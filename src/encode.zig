@@ -22,7 +22,7 @@ pub const Encoder = struct {
 
     /// Pass an `allocator` & `source` bytes buffer. `encodeAlloc` will allocate a buffer
     /// to write into. It may also realloc as needed. Returned value is base58 encoded string.
-    pub fn encodeAlloc(self: *const Self, allocator: std.mem.Allocator, source: []u8) EncoderError![]u8 {
+    pub fn encodeAlloc(self: *const Self, allocator: std.mem.Allocator, source: []const u8) EncoderError![]u8 {
         var dest = try allocator.alloc(u8, source.len * 2);
         var size = try encodeInternal(self.alpha, source, dest);
         if (dest.len != size) {
@@ -33,13 +33,13 @@ pub const Encoder = struct {
 
     /// Pass a `source` and a `dest` to write encoded value into. `encode` returns a
     /// `usize` indicating how many bytes were written. Sizing/resizing, `dest` buffer is up to the caller.
-    pub fn encode(self: *const Self, source: []u8, dest: []u8) EncoderError!usize {
+    pub fn encode(self: *const Self, source: []const u8, dest: []u8) EncoderError!usize {
         var size = try encodeInternal(self.alpha, source, dest);
         return size;
     }
 };
 
-fn encodeInternal(alpha: Alphabet, source: []u8, dest: []u8) EncoderError!usize {
+fn encodeInternal(alpha: Alphabet, source: []const u8, dest: []u8) EncoderError!usize {
     var index: usize = 0;
 
     for (source, 0..) |inputByte, i| {
