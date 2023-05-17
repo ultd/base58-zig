@@ -171,7 +171,7 @@ pub fn main() !void {
 <summary><code>decode</code> - Decodes a base58 encoded string into `dest` buffer and returns number of bytes written.</summary>
 
 <br/>
-The `dest` buffer written to needs to be properly sized. Base58 encoding is a variable length encoder therefore you should allocate extra and then resize if needed afterwards. Below is an example.
+The `dest` buffer written to needs to be properly sized. Base58 encoding is a variable length encoder therefore you should allocate same size buffer as encoded value and then resize, if needed, afterwards. Below is an example.
 <br/>
 <br/>
 
