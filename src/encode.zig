@@ -2,13 +2,9 @@ const std = @import("std");
 const testing = std.testing;
 const Alphabet = @import("./alphabet.zig").Alphabet;
 
-const Error = error{
-    DestBuffTooSmall,
-    BufResizeFailed,
-};
+const EncoderError = error{ DestBuffTooSmall, BufResizeFailed, OutOfMemory };
 
 pub const Encoder = struct {
-    allocator: std.mem.Allocator,
     alpha: Alphabet,
 
     const Self = @This();
@@ -17,20 +13,33 @@ pub const Encoder = struct {
         alphabet: Alphabet = Alphabet.DEFAULT,
     };
 
-    pub fn init(allocator: std.mem.Allocator, options: Options) Self {
+    /// Initialize Encoder with options
+    pub fn init(options: Options) Self {
         return Self{
-            .allocator = allocator,
             .alpha = options.alphabet,
         };
     }
 
-    pub fn encode(self: Self, source: []u8) ![]u8 {
-        return encodeInternal(self.allocator, self.alpha, source);
+    /// Pass an `allocator` & `source` bytes buffer. `encodeAlloc` will allocate a buffer
+    /// to write into. It may also realloc as needed. Returned value is base58 encoded string.
+    pub fn encodeAlloc(self: *const Self, allocator: std.mem.Allocator, source: []u8) EncoderError![]u8 {
+        var dest = try allocator.alloc(u8, source.len * 2);
+        var size = try encodeInternal(self.alpha, source, dest);
+        if (dest.len != size) {
+            dest = try allocator.realloc(dest, size);
+        }
+        return dest;
+    }
+
+    /// Pass a `source` and a `dest` to write encoded value into. `encode` returns a
+    /// `usize` indicating how many bytes were written. Sizing/resizing, `dest` buffer is up to the caller.
+    pub fn encode(self: *const Self, source: []u8, dest: []u8) EncoderError!usize {
+        var size = try encodeInternal(self.alpha, source, dest);
+        return size;
     }
 };
 
-fn encodeInternal(allocator: std.mem.Allocator, alpha: Alphabet, source: []u8) ![]u8 {
-    var dest = try allocator.alloc(u8, source.len * 2);
+fn encodeInternal(alpha: Alphabet, source: []u8, dest: []u8) EncoderError!usize {
     var index: usize = 0;
 
     for (source, 0..) |inputByte, i| {
@@ -47,7 +56,7 @@ fn encodeInternal(allocator: std.mem.Allocator, alpha: Alphabet, source: []u8) !
 
         while (carry > 0) {
             if (index == dest.len) {
-                return Error.DestBuffTooSmall;
+                return EncoderError.DestBuffTooSmall;
             }
             dest[index] = @intCast(u8, (carry % 58));
             index += 1;
@@ -59,7 +68,7 @@ fn encodeInternal(allocator: std.mem.Allocator, alpha: Alphabet, source: []u8) !
         _ = i;
         if (inputByte == 0) {
             if (index == dest.len) {
-                return Error.DestBuffTooSmall;
+                return EncoderError.DestBuffTooSmall;
             }
             dest[index] = 0;
             index += 1;
@@ -74,11 +83,7 @@ fn encodeInternal(allocator: std.mem.Allocator, alpha: Alphabet, source: []u8) !
         y += 1;
     }
 
-    if (dest.len != index) {
-        dest = try allocator.realloc(dest, index);
-    }
-
     std.mem.reverse(u8, dest[0..index]);
 
-    return dest;
+    return index;
 }

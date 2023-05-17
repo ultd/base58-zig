@@ -4,13 +4,14 @@ const Decoder = @import("./decode.zig").Decoder;
 const Alphabet = @import("./alphabet.zig").Alphabet;
 const testing = std.testing;
 
-test "should encode value correctly" {
+test "should encodeAlloc value correctly" {
     testing.log_level = std.log.Level.debug;
 
     var source = [32]u8{ 57, 54, 18, 6, 106, 202, 13, 245, 224, 235, 33, 252, 254, 251, 161, 17, 248, 108, 25, 214, 169, 154, 91, 101, 17, 121, 235, 82, 175, 197, 144, 145 };
 
-    var encoder = Encoder.init(testing.allocator, .{});
-    var encodedVal = try encoder.encode(
+    const encoder = Encoder.init(.{});
+    var encodedVal = try encoder.encodeAlloc(
+        testing.allocator,
         source[0..],
     );
     defer testing.allocator.free(encodedVal);
@@ -18,103 +19,131 @@ test "should encode value correctly" {
     try testing.expect(std.mem.eql(u8, encodedVal, "4rL4RCWHz3iNCdCaveD8KcHfV9YWGsqSHFPo7X2zBNwa"));
 }
 
-test "should decode value correctly" {
+test "should decodeAlloc value correctly" {
     testing.log_level = std.log.Level.debug;
 
     var original = [32]u8{ 57, 54, 18, 6, 106, 202, 13, 245, 224, 235, 33, 252, 254, 251, 161, 17, 248, 108, 25, 214, 169, 154, 91, 101, 17, 121, 235, 82, 175, 197, 144, 145 };
 
     var encodedVal = "4rL4RCWHz3iNCdCaveD8KcHfV9YWGsqSHFPo7X2zBNwa";
 
-    var decoder = Decoder.init(testing.allocator, .{});
-    var decodedVal = try decoder.decode(encodedVal[0..]);
+    const decoder = Decoder.init(.{});
+    var decodedVal = try decoder.decodeAlloc(testing.allocator, encodedVal);
     defer testing.allocator.free(decodedVal);
 
     try testing.expect(std.mem.eql(u8, decodedVal, &original));
 }
 
-test "string as bytes encodes/decodes" {
+test "strings as bytes encodeAlloc/decodeAlloc correctly" {
     testing.log_level = std.log.Level.debug;
 
     var someMsg: [12]u8 = [12]u8{ 'H', 'e', 'l', 'l', 'o', ',', ' ', 'W', 'o', 'r', 'l', 'd' };
-    var encoder = Encoder.init(testing.allocator, .{});
+    const encoder = Encoder.init(.{});
 
-    var encodedVal = try encoder.encode(
+    var encodedVal = try encoder.encodeAlloc(
+        testing.allocator,
         someMsg[0..],
     );
     defer testing.allocator.free(encodedVal);
 
-    var decoder = Decoder.init(testing.allocator, .{});
+    const decoder = Decoder.init(.{});
 
-    var decodedVal = try decoder.decode(encodedVal[0..]);
+    var decodedVal = try decoder.decodeAlloc(testing.allocator, encodedVal[0..]);
     defer testing.allocator.free(decodedVal);
 
     try testing.expect(std.mem.eql(u8, decodedVal, &someMsg));
 }
 
-test "should encode leading 0s slice properly" {
+test "should encodeAlloc leading 0s slice properly" {
     testing.log_level = std.log.Level.debug;
-    var arenaAllocator = std.heap.ArenaAllocator.init(testing.allocator);
-    var allocator = arenaAllocator.allocator();
 
     var slice = [10]u8{ 0, 0, 13, 4, 5, 6, 3, 23, 64, 75 };
 
-    var encoder = Encoder.init(allocator, .{});
-    var encodedVal = try encoder.encode(
+    const encoder = Encoder.init(.{});
+    var encodedVal = try encoder.encodeAlloc(
+        testing.allocator,
         &slice,
     );
+    defer testing.allocator.free(encodedVal);
 
-    var decoder = Decoder.init(allocator, .{});
+    const decoder = Decoder.init(.{});
 
-    var decodedVal = try decoder.decode(encodedVal);
+    var decodedVal = try decoder.decodeAlloc(testing.allocator, encodedVal);
+    defer testing.allocator.free(decodedVal);
+
     try testing.expect(std.mem.eql(u8, decodedVal, &slice));
-
-    arenaAllocator.deinit();
 }
 
-test "should encode single byte slice" {
+test "should encodeAlloc single byte slice" {
     testing.log_level = std.log.Level.debug;
-    var arenaAllocator = std.heap.ArenaAllocator.init(testing.allocator);
-    var allocator = arenaAllocator.allocator();
 
     var slice = [1]u8{255};
 
-    var encoder = Encoder.init(allocator, .{});
-    var encodedVal = try encoder.encode(
+    const encoder = Encoder.init(.{});
+    var encodedVal = try encoder.encodeAlloc(
+        testing.allocator,
         &slice,
     );
+    defer testing.allocator.free(encodedVal);
 
-    var decoder = Decoder.init(allocator, .{});
-    var decodedVal = try decoder.decode(encodedVal);
+    const decoder = Decoder.init(.{});
+    var decodedVal = try decoder.decodeAlloc(testing.allocator, encodedVal);
+    defer testing.allocator.free(decodedVal);
 
     try testing.expect(std.mem.eql(u8, decodedVal, &slice));
-
-    arenaAllocator.deinit();
 }
 
-test "should encode variable slice sizes" {
+test "should encodeAlloc variable slice sizes" {
     testing.log_level = std.log.Level.debug;
-    var arenaAllocator = std.heap.ArenaAllocator.init(testing.allocator);
-    defer arenaAllocator.deinit();
-
-    var allocator = arenaAllocator.allocator();
 
     var iters: usize = 1000;
     var i: usize = 0;
-    var timer = try std.time.Timer.start();
-    var encoder = Encoder.init(allocator, .{});
-    var decoder = Decoder.init(allocator, .{});
+    const encoder = Encoder.init(.{});
+    const decoder = Decoder.init(.{});
 
     while (i < iters) : (i += 1) {
-        var slice = try generateRandomByteSlice(allocator, i, 256);
-        var encodedVal = try encoder.encode(
+        var slice = try generateRandomByteSlice(testing.allocator, i, 256);
+        defer testing.allocator.free(slice);
+        var encodedVal = try encoder.encodeAlloc(
+            testing.allocator,
             slice,
         );
+        defer testing.allocator.free(encodedVal);
 
-        var decodedVal = try decoder.decode(encodedVal);
+        var decodedVal = try decoder.decodeAlloc(testing.allocator, encodedVal);
+        defer testing.allocator.free(decodedVal);
 
         try testing.expect(std.mem.eql(u8, decodedVal, slice));
     }
-    std.log.info("iters: {}, time: {}ms", .{ iters, timer.read() / 1000000 });
+}
+
+test "should encode and decode appropriately " {
+    testing.log_level = std.log.Level.debug;
+
+    var iters: usize = 1000;
+    var i: usize = 0;
+    const encoder = Encoder.init(.{});
+    const decoder = Decoder.init(.{});
+
+    while (i < iters) : (i += 1) {
+        var originalSlice = try generateRandomByteSlice(testing.allocator, i, 256);
+        defer testing.allocator.free(originalSlice);
+
+        var destEncoded = try testing.allocator.alloc(u8, originalSlice.len * 2);
+        var encodeWritten = try encoder.encode(originalSlice, destEncoded);
+        if (encodeWritten < destEncoded.len) {
+            destEncoded = try testing.allocator.realloc(destEncoded, encodeWritten);
+        }
+        defer testing.allocator.free(destEncoded);
+
+        var destDecoded = try testing.allocator.alloc(u8, originalSlice.len);
+        var decodeWriten = try decoder.decode(destEncoded, destDecoded);
+        if (decodeWriten < destDecoded.len) {
+            destDecoded = try testing.allocator.realloc(destDecoded, decodeWriten);
+        }
+        defer testing.allocator.free(destDecoded);
+
+        try testing.expect(std.mem.eql(u8, destDecoded, originalSlice));
+    }
 }
 
 fn generateRandomByteSlice(allocator: std.mem.Allocator, seed: usize, maxLength: usize) ![]u8 {

@@ -1,14 +1,14 @@
 const std = @import("std");
 const Alphabet = @import("./alphabet.zig").Alphabet;
 
-pub const Error = error{
+pub const DecoderError = error{
     NonAsciiCharacter,
     InvalidCharacter,
     BufferTooSmall,
+    OutOfMemory,
 };
 
 pub const Decoder = struct {
-    allocator: std.mem.Allocator,
     alpha: Alphabet,
 
     const Self = @This();
@@ -17,57 +17,69 @@ pub const Decoder = struct {
         alphabet: Alphabet = Alphabet.DEFAULT,
     };
 
-    pub fn init(allocator: std.mem.Allocator, options: Options) Self {
+    /// Initialize Decoder with options
+    pub fn init(options: Options) Self {
         return Self{
-            .allocator = allocator,
             .alpha = options.alphabet,
         };
     }
 
-    pub fn decode(self: Self, input: []const u8) ![]u8 {
-        return decodeInteral(self.allocator, self.alpha, input);
+    /// Pass a `allocator` & `encoded` bytes buffer. `decodeAlloc` will allocate a buffer
+    /// to write into. It may also realloc as needed. Returned value is proper size.
+    pub fn decodeAlloc(self: *const Self, allocator: std.mem.Allocator, encoded: []const u8) ![]u8 {
+        var dest = try allocator.alloc(u8, encoded.len);
+        var size = try decodeInteral(self.alpha, encoded, dest);
+        if (dest.len != size) {
+            dest = try allocator.realloc(dest, size);
+        }
+        return dest;
+    }
+
+    /// Pass a `encoded` and a `dest` to write decoded value into. `decode` returns a
+    /// `usize` indicating how many bytes were written. Sizing/resizing, `dest` buffer is up to the caller.
+    pub fn decode(self: *const Self, encoded: []const u8, dest: []u8) !usize {
+        var size = try decodeInteral(self.alpha, encoded, dest);
+        return size;
     }
 };
 
-fn decodeInteral(allocator: std.mem.Allocator, alpha: Alphabet, input: []const u8) ![]u8 {
-    var output = try allocator.alloc(u8, input.len);
-
+fn decodeInteral(alpha: Alphabet, encoded: []const u8, dest: []u8) !usize {
     var index: usize = 0;
     var zero = alpha.encode[0];
 
-    for (input) |c| {
+    for (encoded) |c| {
         if (c > 127) {
-            return Error.NonAsciiCharacter;
+            return DecoderError.NonAsciiCharacter;
         }
 
         var val: usize = alpha.decode[c];
         if (val == 0xFF) {
-            return Error.InvalidCharacter;
+            return DecoderError.InvalidCharacter;
         }
 
         var x: usize = 0;
         while (x < index) : (x += 1) {
-            var byte = &output[x];
+            var byte = &dest[x];
             val += @intCast(usize, byte.*) * 58;
             byte.* = @intCast(u8, val & 0xFF);
             val >>= 8;
         }
 
         while (val > 0) {
-            if (index >= output.len) {
-                return Error.BufferTooSmall;
+            if (index >= dest.len) {
+                return DecoderError.BufferTooSmall;
             }
 
-            var byte = &output[index];
+            var byte = &dest[index];
             byte.* = @intCast(u8, val) & 0xFF;
             index += 1;
             val >>= 8;
         }
     }
 
-    for (input) |*c| {
+    for (encoded) |*c| {
         if (c.* == zero) {
-            var byte = &output[index];
+            var byte = &dest[index];
             byte.* = 0;
             index += 1;
         } else {
@@ -75,11 +87,7 @@ fn decodeInteral(allocator: std.mem.Allocator, alpha: Alphabet, input: []const u
         }
     }
 
-    if (output.len != index) {
-        output = try allocator.realloc(output, index);
-    }
+    std.mem.reverse(u8, dest[0..index]);
 
-    std.mem.reverse(u8, output);
-
-    return output;
+    return index;
 }

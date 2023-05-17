@@ -74,9 +74,10 @@ pub const Alphabet = struct {
 
     const Self = @This();
 
-    pub const DEFAULT = Self.new(.{}) catch unreachable;
+    pub const DEFAULT = Self.init(.{}) catch unreachable;
 
-    pub fn new(options: Options) !Self {
+    /// Initialize an Alpabet set with options
+    pub fn init(options: Options) !Self {
         var base: [58]u8 = options.alphabet;
 
         var encode = [58]u8{
