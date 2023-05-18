@@ -7,7 +7,11 @@ const testing = std.testing;
 test "should encodeAlloc value correctly" {
     testing.log_level = std.log.Level.debug;
 
-    var source = [32]u8{ 57, 54, 18, 6, 106, 202, 13, 245, 224, 235, 33, 252, 254, 251, 161, 17, 248, 108, 25, 214, 169, 154, 91, 101, 17, 121, 235, 82, 175, 197, 144, 145 };
+    var source = [32]u8{
+        57,  54,  18,  6,   106, 202, 13,  245, 224, 235, 33,  252, 254,
+        251, 161, 17,  248, 108, 25,  214, 169, 154, 91,  101, 17,  121,
+        235, 82,  175, 197, 144, 145,
+    };
 
     const encoder = Encoder.init(.{});
     var encodedVal = try encoder.encodeAlloc(
@@ -22,7 +26,11 @@ test "should encodeAlloc value correctly" {
 test "should decodeAlloc value correctly" {
     testing.log_level = std.log.Level.debug;
 
-    var original = [32]u8{ 57, 54, 18, 6, 106, 202, 13, 245, 224, 235, 33, 252, 254, 251, 161, 17, 248, 108, 25, 214, 169, 154, 91, 101, 17, 121, 235, 82, 175, 197, 144, 145 };
+    var original = [32]u8{
+        57,  54,  18,  6,   106, 202, 13,  245, 224, 235, 33,  252, 254,
+        251, 161, 17,  248, 108, 25,  214, 169, 154, 91,  101, 17,  121,
+        235, 82,  175, 197, 144, 145,
+    };
 
     var encodedVal = "4rL4RCWHz3iNCdCaveD8KcHfV9YWGsqSHFPo7X2zBNwa";
 
