@@ -60,8 +60,8 @@ fn decodeInteral(alpha: Alphabet, encoded: []const u8, dest: []u8) !usize {
         var x: usize = 0;
         while (x < index) : (x += 1) {
             var byte = &dest[x];
-            val += @intCast(usize, byte.*) * 58;
-            byte.* = @intCast(u8, val & 0xFF);
+            val += @as(usize, @intCast(byte.*)) * 58;
+            byte.* = @as(u8, @intCast(val & 0xFF));
             val >>= 8;
         }
 
@@ -71,7 +71,7 @@ fn decodeInteral(alpha: Alphabet, encoded: []const u8, dest: []u8) !usize {
             }
 
             var byte = &dest[index];
-            byte.* = @intCast(u8, val) & 0xFF;
+            byte.* = @as(u8, @intCast(val)) & 0xFF;
             index += 1;
             val >>= 8;
         }

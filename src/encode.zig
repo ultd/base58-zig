@@ -49,7 +49,7 @@ fn encodeInternal(alpha: Alphabet, source: []const u8, dest: []u8) EncoderError!
         var x: usize = 0;
         while (x < index) {
             carry += @as(usize, dest[x]) * 256;
-            dest[x] = @intCast(u8, carry % 58);
+            dest[x] = @intCast(carry % 58);
             carry /= 58;
             x += 1;
         }
@@ -58,7 +58,7 @@ fn encodeInternal(alpha: Alphabet, source: []const u8, dest: []u8) EncoderError!
             if (index == dest.len) {
                 return EncoderError.DestBuffTooSmall;
             }
-            dest[index] = @intCast(u8, (carry % 58));
+            dest[index] = @as(u8, @intCast((carry % 58)));
             index += 1;
             carry /= 58;
         }

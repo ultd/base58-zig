@@ -155,7 +155,7 @@ test "should encode and decode appropriately " {
 }
 
 fn generateRandomByteSlice(allocator: std.mem.Allocator, seed: usize, maxLength: usize) ![]u8 {
-    var rng = std.rand.DefaultPrng.init(@intCast(u64, std.time.timestamp() * @intCast(i64, seed)));
+    var rng = std.rand.DefaultPrng.init(@intCast(std.time.timestamp() * @as(i64, @intCast(seed))));
     const length = rng.random().uintAtMost(usize, maxLength);
     var slice = try allocator.alloc(u8, length);
     rng.random().bytes(slice);
