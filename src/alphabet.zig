@@ -78,7 +78,7 @@ pub const Alphabet = struct {
 
     /// Initialize an Alpabet set with options
     pub fn init(options: Options) !Self {
-        var base: [58]u8 = options.alphabet;
+        const base: [58]u8 = options.alphabet;
 
         var encode = [58]u8{
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

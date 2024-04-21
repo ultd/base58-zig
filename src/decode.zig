@@ -28,7 +28,7 @@ pub const Decoder = struct {
     /// to write into. It may also realloc as needed. Returned value is proper size.
     pub fn decodeAlloc(self: *const Self, allocator: std.mem.Allocator, encoded: []const u8) ![]u8 {
         var dest = try allocator.alloc(u8, encoded.len);
-        var size = try decodeInteral(self.alpha, encoded, dest);
+        const size = try decodeInteral(self.alpha, encoded, dest);
         if (dest.len != size) {
             dest = try allocator.realloc(dest, size);
         }
@@ -38,14 +38,14 @@ pub const Decoder = struct {
     /// Pass a `encoded` and a `dest` to write decoded value into. `decode` returns a
     /// `usize` indicating how many bytes were written. Sizing/resizing, `dest` buffer is up to the caller.
     pub fn decode(self: *const Self, encoded: []const u8, dest: []u8) !usize {
-        var size = try decodeInteral(self.alpha, encoded, dest);
+        const size = try decodeInteral(self.alpha, encoded, dest);
         return size;
     }
 };
 
 fn decodeInteral(alpha: Alphabet, encoded: []const u8, dest: []u8) !usize {
     var index: usize = 0;
-    var zero = alpha.encode[0];
+    const zero = alpha.encode[0];
 
     for (encoded) |c| {
         if (c > 127) {
@@ -59,7 +59,7 @@ fn decodeInteral(alpha: Alphabet, encoded: []const u8, dest: []u8) !usize {
 
         var x: usize = 0;
         while (x < index) : (x += 1) {
-            var byte = &dest[x];
+            const byte = &dest[x];
             val += @as(usize, @intCast(byte.*)) * 58;
             byte.* = @as(u8, @intCast(val & 0xFF));
             val >>= 8;
@@ -70,7 +70,7 @@ fn decodeInteral(alpha: Alphabet, encoded: []const u8, dest: []u8) !usize {
                 return DecoderError.BufferTooSmall;
             }
 
-            var byte = &dest[index];
+            const byte = &dest[index];
             byte.* = @as(u8, @intCast(val)) & 0xFF;
             index += 1;
             val >>= 8;
@@ -79,7 +79,7 @@ fn decodeInteral(alpha: Alphabet, encoded: []const u8, dest: []u8) !usize {
 
     for (encoded) |*c| {
         if (c.* == zero) {
-            var byte = &dest[index];
+            const byte = &dest[index];
             byte.* = 0;
             index += 1;
         } else {
