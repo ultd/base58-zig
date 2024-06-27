@@ -51,8 +51,8 @@ _base58-zig_ is encoder/decoder library written in Zig.
            .target = target,
            .optimize = optimize,
        });
-   +   exe.addModule("base58-zig", base58_module);
-       exe.install();
+   +   exe.root_module.addImport("base58-zig", base58_module);
+       b.installArtifact(exe);
 
        ...
    }
